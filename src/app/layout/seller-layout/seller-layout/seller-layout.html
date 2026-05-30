@@ -1,0 +1,16 @@
+<div class="seller-shell">
+  <aside>
+    <h2>Seller Portal</h2>
+    <nav>
+      <a routerLink="/seller" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/seller/profile" routerLinkActive="active">Store Profile</a>
+      <a routerLink="/seller/products" routerLinkActive="active">My Products</a>
+      <a routerLink="/seller/orders" routerLinkActive="active">Orders</a>
+      <a routerLink="/seller/earnings" routerLinkActive="active">Earnings</a>
+      <a routerLink="/">← Back to Store</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <router-outlet />
+  </section>
+</div>

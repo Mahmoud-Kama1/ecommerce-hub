@@ -1,0 +1,20 @@
+﻿<div class="page-header">
+  <h1>Verify Your Email</h1>
+  <p>We sent a verification link to {{ auth.currentUser()?.email ?? 'your email' }}.</p>
+</div>
+
+<div class="card" style="max-width: 480px">
+  <p>Click the link in your email, or use the buttons below for demo purposes.</p>
+  @if (message) {
+    <p style="color: var(--success)">{{ message }}</p>
+  }
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem">
+    <button type="button" class="btn btn-primary" (click)="verifyNow()" [disabled]="!auth.isAuthenticated()">
+      Verify Now (Demo)
+    </button>
+    <button type="button" class="btn btn-secondary" (click)="resend()" [disabled]="sending">
+      {{ sending ? 'Sending…' : 'Resend Email' }}
+    </button>
+    <a routerLink="/" class="btn btn-secondary">Continue Shopping</a>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+﻿<div class="page-header">
+  <h1>Users</h1>
+  <p>Manage customer, seller, and admin accounts.</p>
+</div>
+
+<div class="card">
+  <table style="width: 100%; border-collapse: collapse">
+    <thead>
+      <tr style="text-align: left; border-bottom: 1px solid var(--border)">
+        <th style="padding: 0.5rem">Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users; track user.id) {
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem">{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.isActive ? 'Active' : 'Inactive' }}</td>
+          <td>
+            <button type="button" class="btn btn-secondary" (click)="toggleActive(user)">
+              {{ user.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

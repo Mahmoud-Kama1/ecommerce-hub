@@ -1,0 +1,21 @@
+﻿<div class="page-header">
+  @if (category) {
+    <h1>{{ category.name }}</h1>
+    <p>{{ category.description }}</p>
+  } @else {
+    <h1>Category</h1>
+    <p>Category not found.</p>
+  }
+</div>
+
+<a routerLink="/products" class="btn btn-secondary" style="margin-bottom: 1rem">← All Products</a>
+
+@if (loading$ | async) {
+  <p>Loading products…</p>
+} @else {
+  <div class="card-grid">
+    @for (product of products$ | async; track product.id) {
+      <app-product-card [product]="product" />
+    }
+  </div>
+}

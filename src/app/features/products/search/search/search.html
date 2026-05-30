@@ -1,0 +1,20 @@
+﻿<div class="page-header">
+  <h1>Search Products</h1>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="search()" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem">
+  <input formControlName="q" placeholder="Search by name…" style="flex: 1" />
+  <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+@if (loading$ | async) {
+  <p>Searching…</p>
+} @else {
+  <div class="card-grid">
+    @for (product of products$ | async; track product.id) {
+      <app-product-card [product]="product" />
+    } @empty {
+      <p>No products found.</p>
+    }
+  </div>
+}

@@ -1,0 +1,30 @@
+<header class="header">
+  <a routerLink="/" class="brand">Ecommerce Hub</a>
+
+  <nav>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+    <a routerLink="/products" routerLinkActive="active">Products</a>
+    <a routerLink="/cart" routerLinkActive="active">
+      Cart
+      @if (cart.cart().items.length) {
+        <span class="badge">{{ cart.cart().items.length }}</span>
+      }
+    </a>
+    @if (auth.isAuthenticated()) {
+      <span class="user-name">{{ auth.currentUser()?.firstName }}</span>
+      <a routerLink="/profile" routerLinkActive="active">Profile</a>
+      <a routerLink="/wishlist" routerLinkActive="active">Wishlist</a>
+      <a routerLink="/orders" routerLinkActive="active">Orders</a>
+      @if (auth.currentUser()?.role === 'admin') {
+        <a routerLink="/admin" routerLinkActive="active">Admin</a>
+      }
+      @if (auth.currentUser()?.role === 'seller' || auth.currentUser()?.role === 'admin') {
+        <a routerLink="/seller" routerLinkActive="active">Seller</a>
+      }
+      <button type="button" class="btn-logout" (click)="logout()">Logout</button>
+    } @else {
+      <a routerLink="/auth/login" routerLinkActive="active">Login</a>
+      <a routerLink="/auth/register" routerLinkActive="active">Register</a>
+    }
+  </nav>
+</header>

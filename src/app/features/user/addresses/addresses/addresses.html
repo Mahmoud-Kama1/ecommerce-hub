@@ -1,0 +1,38 @@
+﻿<div class="page-header">
+  <h1>Addresses</h1>
+  <p>Manage your shipping addresses.</p>
+</div>
+
+<a routerLink="/profile" class="btn btn-secondary" style="margin-bottom: 1rem">← Back to Profile</a>
+
+@if (addresses.length === 0) {
+  <div class="card"><p>No addresses saved yet.</p></div>
+} @else {
+  @for (addr of addresses; track addr.id) {
+    <div class="card" style="margin-bottom: 0.75rem; display: flex; justify-content: space-between">
+      <div>
+        <strong>{{ addr.label }}</strong>
+        @if (addr.isDefault) { <span> (Default)</span> }
+        <p>{{ addr.street }}, {{ addr.city }}, {{ addr.state }} {{ addr.postalCode }}, {{ addr.country }}</p>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="removeAddress(addr.id)">Remove</button>
+    </div>
+  }
+}
+
+@if (!showForm) {
+  <button type="button" class="btn btn-primary" (click)="showForm = true">Add Address</button>
+} @else {
+  <div class="card" style="margin-top: 1rem">
+    <form [formGroup]="form" (ngSubmit)="addAddress()">
+      <div class="form-group"><label>Label</label><input formControlName="label" /></div>
+      <div class="form-group"><label>Street</label><input formControlName="street" /></div>
+      <div class="form-group"><label>City</label><input formControlName="city" /></div>
+      <div class="form-group"><label>State</label><input formControlName="state" /></div>
+      <div class="form-group"><label>Postal Code</label><input formControlName="postalCode" /></div>
+      <div class="form-group"><label>Country</label><input formControlName="country" /></div>
+      <button type="submit" class="btn btn-primary">Save Address</button>
+      <button type="button" class="btn btn-secondary" (click)="showForm = false">Cancel</button>
+    </form>
+  </div>
+}

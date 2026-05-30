@@ -1,0 +1,18 @@
+﻿<div class="page-header">
+  <h1>Loyalty Program</h1>
+  <p>Earn points with every purchase.</p>
+</div>
+
+<div class="card" style="margin-bottom: 1rem">
+  <h2>Your Points: {{ auth.currentUser()?.loyaltyPoints ?? 0 }}</h2>
+  <p>Redeem 100 points for $5 off your next order.</p>
+</div>
+
+@for (tier of tiers; track tier.name) {
+  <div class="card" style="margin-bottom: 0.75rem">
+    <strong>{{ tier.name }}</strong> (from {{ tier.min }} pts)
+    <p>{{ tier.benefits }}</p>
+  </div>
+}
+
+<a routerLink="/products" class="btn btn-primary">Shop to Earn Points</a>

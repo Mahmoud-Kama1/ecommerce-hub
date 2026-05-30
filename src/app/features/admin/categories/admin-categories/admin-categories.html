@@ -1,0 +1,13 @@
+﻿<div class="page-header">
+  <h1>Categories</h1>
+</div>
+
+<div class="card-grid">
+  @for (cat of categories; track cat.id) {
+    <div class="card">
+      <h3>{{ cat.name }}</h3>
+      <p>{{ cat.description }}</p>
+      <a [routerLink]="['/categories', cat.slug]" class="btn btn-secondary">View in Store</a>
+    </div>
+  }
+</div>

@@ -1,0 +1,22 @@
+﻿<div class="page-header">
+  <h1>Earnings & Payouts</h1>
+  <p>Platform fee: 15%. You receive 85% of each sale.</p>
+</div>
+
+<div class="card" style="margin-bottom: 1rem">
+  <h2>Total Earnings</h2>
+  <p style="font-size: 2rem; font-weight: 700">${{ totalEarnings | number: '1.2-2' }}</p>
+</div>
+
+@if (payouts.length === 0) {
+  <div class="card"><p>No payout history yet.</p></div>
+} @else {
+  <div class="card">
+    @for (payout of payouts; track payout.date) {
+      <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border)">
+        <span>{{ payout.date | date: 'mediumDate' }}</span>
+        <span>${{ payout.amount | number: '1.2-2' }} — {{ payout.status }}</span>
+      </div>
+    }
+  </div>
+}

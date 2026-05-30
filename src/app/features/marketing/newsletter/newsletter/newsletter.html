@@ -1,0 +1,18 @@
+﻿<div class="page-header">
+  <h1>Newsletter</h1>
+  <p>Subscribe for deals and new arrivals.</p>
+</div>
+
+<div class="card" style="max-width: 480px">
+  @if (subscribed) {
+    <p style="color: var(--success)">Thanks for subscribing! You'll receive our next newsletter.</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" formControlName="email" />
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Subscribe</button>
+    </form>
+  }
+</div>

@@ -1,0 +1,48 @@
+<section class="hero">
+  <h1>Welcome to Ecommerce Hub</h1>
+  <p>Multi-vendor marketplace with customer, seller, and admin experiences.</p>
+  <div class="hero-actions">
+    <a routerLink="/products" class="btn btn-primary">Browse Products</a>
+    <a routerLink="/auth/register" class="btn btn-secondary">Create Account</a>
+  </div>
+</section>
+
+<section>
+ 
+
+  @if (loading$ | async) {
+    <p>Loading products...</p>
+  } @else {
+    <div class="card-grid">
+      @for (product of products$ | async; track product.id) {
+        <app-product-card [product]="product" />
+      }
+    </div>
+  }
+</section>
+
+<section style="margin-top: 2rem">
+  <div class="page-header">
+    <h2>Shop by Category</h2>
+  </div>
+  <div class="card-grid">
+    <a routerLink="/categories/electronics" class="card btn" style="text-decoration: none; color: inherit">Electronics</a>
+    <a routerLink="/categories/fashion" class="card btn" style="text-decoration: none; color: inherit">Fashion</a>
+    <a routerLink="/categories/home-garden" class="card btn" style="text-decoration: none; color: inherit">Home & Garden</a>
+    <a routerLink="/search" class="card btn" style="text-decoration: none; color: inherit">Search Products</a>
+  </div>
+</section>
+
+<section style="margin-top: 2rem">
+  <div class="page-header">
+    <h2>Shop by Category</h2>
+  </div>
+  <div class="card-grid">
+    <a routerLink="/categories/electronics" class="card btn" style="text-decoration: none; color: inherit">Electronics</a>
+    <a routerLink="/categories/fashion" class="card btn" style="text-decoration: none; color: inherit">Fashion</a>
+    <a routerLink="/categories/home-garden" class="card btn" style="text-decoration: none; color: inherit">Home & Garden</a>
+    <a routerLink="/search" class="card btn" style="text-decoration: none; color: inherit">Search Products</a>
+  </div>
+</section>
+
+

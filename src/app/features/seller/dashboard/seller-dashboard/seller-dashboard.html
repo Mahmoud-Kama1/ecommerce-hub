@@ -1,0 +1,11 @@
+﻿<div class="page-header">
+  <h1>Seller Dashboard</h1>
+  <p>Overview of your store performance.</p>
+</div>
+
+<div class="card-grid">
+  <div class="card"><h3>Products</h3><p style="font-size: 2rem; font-weight: 700">{{ stats.products }}</p></div>
+  <div class="card"><h3>Orders</h3><p style="font-size: 2rem; font-weight: 700">{{ stats.orders }}</p></div>
+  <div class="card"><h3>Earnings (85%)</h3><p style="font-size: 2rem; font-weight: 700">${{ stats.earnings | number: '1.2-2' }}</p></div>
+  <div class="card"><h3>Pending</h3><p style="font-size: 2rem; font-weight: 700">{{ stats.pending }}</p></div>
+</div>

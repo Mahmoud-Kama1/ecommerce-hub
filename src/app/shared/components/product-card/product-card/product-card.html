@@ -1,0 +1,22 @@
+@if (product) {
+  <article class="card product-card">
+    <div class="image">
+      @if (product.images[0]?.url) {
+        <img [src]="product.images[0].url" [alt]="product.images[0].alt || product.name" />
+      } @else {
+        <span>No image</span>
+      }
+    </div>
+    <a class="title" [routerLink]="['/products', product.id]">{{ product.name }}</a>
+    <app-rating-stars [rating]="product.rating" [count]="product.reviewCount" />
+    <div class="price-row">
+      <span class="price">${{ product.price | number: '1.2-2' }}</span>
+      @if (product.compareAtPrice) {
+        <span class="compare">${{ product.compareAtPrice | number: '1.2-2' }}</span>
+      }
+    </div>
+    @if (product.stock === 0) {
+      <span class="stock-out">Out of stock</span>
+    }
+  </article>
+}

@@ -1,0 +1,24 @@
+<h1>Login</h1>
+<p>Demo accounts: demo@ecommerce-hub.com / demo123 · admin@ecommerce-hub.com / admin123 · seller@ecommerce-hub.com / seller123</p>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input id="email" type="email" formControlName="email" />
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input id="password" type="password" formControlName="password" />
+  </div>
+  @if (error$ | async; as error) {
+    <p class="error">{{ error }}</p>
+  }
+  <button class="btn btn-primary" type="submit" [disabled]="loading$ | async">Sign In</button>
+</form>
+
+<app-social-login />
+
+<p>
+  <a routerLink="/auth/forgot-password">Forgot password?</a> ·
+  <a routerLink="/auth/register">Create account</a>
+</p>

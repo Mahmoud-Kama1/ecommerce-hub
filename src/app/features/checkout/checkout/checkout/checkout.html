@@ -1,0 +1,67 @@
+﻿<div class="page-header">
+  <h1>Checkout</h1>
+  <p>Review your order and complete payment.</p>
+</div>
+
+@if (cartService.cart().items.length === 0) {
+  <div class="card">
+    <p>Your cart is empty.</p>
+    <a routerLink="/products" class="btn btn-primary">Browse Products</a>
+  </div>
+} @else {
+  <div class="card-grid" style="grid-template-columns: 2fr 1fr">
+    <div class="card">
+      <h3>Shipping Address</h3>
+      <form [formGroup]="form" (ngSubmit)="placeOrder()">
+        <div class="form-group">
+          <label>Street</label>
+          <input formControlName="street" />
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input formControlName="city" />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input formControlName="state" />
+        </div>
+        <div class="form-group">
+          <label>Postal Code</label>
+          <input formControlName="postalCode" />
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input formControlName="country" />
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select formControlName="paymentMethod">
+            <option value="card">Credit / Debit Card</option>
+            <option value="paypal">PayPal</option>
+            <option value="wallet">Digital Wallet</option>
+          </select>
+        </div>
+        @if (error) {
+          <p class="error">{{ error }}</p>
+        }
+        <button type="submit" class="btn btn-primary" [disabled]="submitting || form.invalid">
+          {{ submitting ? 'Placing order…' : 'Place Order' }}
+        </button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Order Summary</h3>
+      @for (item of cartService.cart().items; track item.productId) {
+        <p>{{ item.name }} × {{ item.quantity }} — ${{ item.price * item.quantity | number: '1.2-2' }}</p>
+      }
+      <hr />
+      <p>Subtotal: ${{ cartService.cart().subtotal | number: '1.2-2' }}</p>
+      <p>Discount: -${{ cartService.cart().discount | number: '1.2-2' }}</p>
+      <p>Shipping: ${{ cartService.cart().shipping | number: '1.2-2' }}</p>
+      <p>Tax: ${{ cartService.cart().tax | number: '1.2-2' }}</p>
+      <p><strong>Total: ${{ cartService.cart().total | number: '1.2-2' }}</strong></p>
+      <a routerLink="/cart" class="btn btn-secondary">Back to Cart</a>
+    </div>
+  </div>
+}

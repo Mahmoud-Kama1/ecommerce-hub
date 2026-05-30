@@ -1,0 +1,30 @@
+﻿<div class="page-header">
+  <h1>My Orders</h1>
+  <p>View and track your order history.</p>
+</div>
+
+@if (loading()) {
+  <p>Loading orders…</p>
+} @else if (orders().length === 0) {
+  <div class="card">
+    <p>No orders yet.</p>
+    <a routerLink="/products" class="btn btn-primary">Start Shopping</a>
+  </div>
+} @else {
+  <div class="card-grid" style="grid-template-columns: 1fr">
+    @for (order of orders(); track order.id) {
+      <article class="card" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+        <div>
+          <strong>{{ order.id }}</strong>
+          <p>{{ order.createdAt | date: 'medium' }} · {{ order.items.length }} item(s)</p>
+          <p>Status: <strong>{{ order.status }}</strong></p>
+        </div>
+        <div style="text-align: right">
+          <p><strong>${{ order.total | number: '1.2-2' }}</strong></p>
+          <a [routerLink]="['/orders', order.id]" class="btn btn-secondary">View</a>
+          <a [routerLink]="['/orders', order.id, 'tracking']" class="btn btn-primary">Track</a>
+        </div>
+      </article>
+    }
+  </div>
+}

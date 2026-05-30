@@ -1,0 +1,23 @@
+﻿<div class="page-header">
+  <h1>Payment Methods</h1>
+  <p>Manage saved payment options.</p>
+</div>
+
+<a routerLink="/profile" class="btn btn-secondary" style="margin-bottom: 1rem">← Back to Profile</a>
+
+@if (methods.length === 0) {
+  <div class="card"><p>No payment methods saved.</p></div>
+} @else {
+  @for (method of methods; track method.id) {
+    <div class="card" style="margin-bottom: 0.75rem; display: flex; justify-content: space-between">
+      <div>
+        <strong>{{ method.label }}</strong>
+        @if (method.isDefault) { <span> (Default)</span> }
+        <p>{{ method.type | uppercase }}</p>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="removeMethod(method.id)">Remove</button>
+    </div>
+  }
+}
+
+<button type="button" class="btn btn-primary" (click)="addMockCard()">Add Mock Card</button>

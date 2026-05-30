@@ -1,0 +1,20 @@
+﻿<div class="page-header">
+  <h1>Seller Orders</h1>
+</div>
+
+@if (orders.length === 0) {
+  <div class="card"><p>No orders for your products yet.</p></div>
+} @else {
+  @for (order of orders; track order.id) {
+    <div class="card" style="margin-bottom: 0.75rem; display: flex; justify-content: space-between">
+      <div>
+        <strong>{{ order.id }}</strong>
+        <p>{{ order.createdAt | date: 'medium' }} · {{ order.status }}</p>
+      </div>
+      <div>
+        <span>${{ order.total | number: '1.2-2' }}</span>
+        <a [routerLink]="['/orders', order.id]" class="btn btn-secondary" style="margin-left: 0.5rem">View</a>
+      </div>
+    </div>
+  }
+}

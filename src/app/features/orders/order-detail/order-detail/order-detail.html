@@ -1,0 +1,40 @@
+﻿<div class="page-header">
+  <h1>Order Details</h1>
+</div>
+
+@if (loading()) {
+  <p>Loading order…</p>
+} @else if (!order()) {
+  <div class="card">
+    <p>Order not found.</p>
+    <a routerLink="/orders" class="btn btn-primary">Back to Orders</a>
+  </div>
+} @else {
+  <div class="card-grid" style="grid-template-columns: 2fr 1fr">
+    <div class="card">
+      <h3>{{ order()!.id }}</h3>
+      <p>Placed {{ order()!.createdAt | date: 'medium' }}</p>
+      <p>Status: <strong>{{ order()!.status }}</strong></p>
+      <p>Shipping: {{ order()!.shippingAddress }}</p>
+      <p>Payment: {{ order()!.paymentMethod }}</p>
+      @if (order()!.trackingNumber) {
+        <p>Tracking: {{ order()!.trackingNumber }}</p>
+      }
+      <hr />
+      <h4>Items</h4>
+      @for (item of order()!.items; track item.productId) {
+        <p>{{ item.name }} × {{ item.quantity }} — ${{ item.price * item.quantity | number: '1.2-2' }}</p>
+      }
+    </div>
+    <div class="card">
+      <h3>Summary</h3>
+      <p>Subtotal: ${{ order()!.subtotal | number: '1.2-2' }}</p>
+      <p>Discount: -${{ order()!.discount | number: '1.2-2' }}</p>
+      <p>Shipping: ${{ order()!.shipping | number: '1.2-2' }}</p>
+      <p>Tax: ${{ order()!.tax | number: '1.2-2' }}</p>
+      <p><strong>Total: ${{ order()!.total | number: '1.2-2' }}</strong></p>
+      <a [routerLink]="['/orders', order()!.id, 'tracking']" class="btn btn-primary">Track Order</a>
+      <a routerLink="/orders" class="btn btn-secondary">All Orders</a>
+    </div>
+  </div>
+}
