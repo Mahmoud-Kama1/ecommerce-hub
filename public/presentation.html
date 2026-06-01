@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecommerce Hub — Architecture & Feature Presentation</title>
+  <!-- Google Fonts: Outfit (titles) & Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       1. Core Design Tokens & Reset
+       ========================================================================== */
+    :root {
+      --bg-main: #080b11;
+      --bg-card: rgba(15, 23, 42, 0.65);
+      --bg-card-hover: rgba(23, 37, 84, 0.45);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.25);
+      
+      --color-primary: #8b5cf6;
+      --color-secondary: #06b6d4;
+      --color-accent: #d946ef;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      
+      --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --gradient-dark: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+      --gradient-card: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-bright: #ffffff;
+      
+      --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-main);
+      background-image: var(--gradient-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    /* Background decorative elements */
+    .bg-blobs {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+    }
+    
+    .blob-1 {
+      top: -10%;
+      left: -10%;
+      width: 50vw;
+      height: 50vw;
+      background: var(--color-primary);
+      animation: float 20s infinite alternate ease-in-out;
+    }
+    
+    .blob-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 45vw;
+      height: 45vw;
+      background: var(--color-secondary);
+      animation: float 25s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(5%, 5%) scale(1.1); }
+    }
+
+    /* ==========================================================================
+       2. Presentation Layout & Slide Controller
+       ========================================================================== */
+    .presentation-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    /* Top Progress Bar */
+    .progress-container {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--gradient-brand);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    }
+
+    /* Slides Wrapper */
+    .slides-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Slide Defaults */
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1200px;
+      height: 80vh;
+      max-height: 700px;
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    .slide.exit-left {
+      opacity: 0;
+      transform: scale(0.95) translateX(-50px);
+    }
+
+    .slide.enter-right {
+      opacity: 0;
+      transform: scale(0.95) translateX(50px);
+    }
+
+    /* ==========================================================================
+       3. Typography & Styling Utilities
+       ========================================================================== */
+    h1, h2, h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .gradient-text {
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      background: var(--gradient-card);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.25);
+      box-shadow: 0 25px 60px rgba(99, 102, 241, 0.08);
+    }
+
+    /* Columns layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      .slide {
+        height: auto;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px 0;
+      }
+      .glass-card {
+        padding: 24px;
+      }
+    }
+
+    /* Buttons & Interactive Elements */
+    .btn {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-bounce);
+      text-decoration: none;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--gradient-brand);
+      color: white;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge-primary { background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-secondary { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* ==========================================================================
+       4. Slide Specific Contents
+       ========================================================================== */
+    
+    /* Slide 1: Welcome */
+    .welcome-container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .welcome-container h1 {
+      font-size: 4rem;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .welcome-container p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .tagline-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    /* Slide 2: Vision */
+    .section-title {
+      font-size: 1.1rem;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .slide-title {
+      font-size: 2.25rem;
+      margin-bottom: 25px;
+    }
+
+    .vision-card-title {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .vision-text {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .alert-block {
+      background: rgba(99, 102, 241, 0.08);
+      border-left: 4px solid var(--color-primary);
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin-top: 25px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    /* Slide 3: Tech Stack */
+    .tech-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      transition: var(--transition-bounce);
+      height: 100%;
+    }
+
+    .tech-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-glow);
+    }
+
+    .tech-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    .tech-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .tech-card p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    /* Slide 4: Feature Focus - Tabs Component */
+    .tabs-nav {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 6px;
+      border-radius: 12px;
+      gap: 5px;
+      margin-bottom: 25px;
+    }
+
+    .tab-trigger {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .tab-trigger.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-trigger:hover:not(.active) {
+      color: white;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .tab-content.active {
+      display: grid;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Feature Grid Details */
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .feature-list li::before {
+      content: '✓';
+      color: var(--color-secondary);
+      font-weight: bold;
+    }
+
+    /* Dynamic Visual elements */
+    .visual-box {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    .tracker-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .tracker-steps::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 0;
+    }
+
+    .tracker-bar {
+      position: absolute;
+      top: 15px;
+      left: 10px;
+      width: 66%;
+      height: 2px;
+      background: var(--color-success);
+      z-index: 1;
+    }
+
+    .step {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1f2937;
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      transition: var(--transition-bounce);
+    }
+
+    .step.active .step-dot {
+      background: var(--color-success);
+      border-color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .step.active {
+      color: white;
+      font-weight: 500;
+    }
+
+    /* Slide 5: Portal credentials */
+    .portal-pillar {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .portal-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .stat-mini {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-mini span {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-mini strong {
+      font-size: 1.1rem;
+      color: white;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .login-credentials-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .login-credentials-pill code {
+      font-family: 'Fira Code', monospace;
+      color: var(--color-secondary);
+    }
+
+    /* Slide 6: State Flow Architecture */
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.15);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .arch-flow {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+
+    .flow-node {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      text-align: center;
+      font-weight: 500;
+      flex: 1;
+      position: relative;
+    }
+
+    .flow-node.active-node {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    .code-block-container {
+      background: #05070c;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .code-keyword { color: #f43f5e; }
+    .code-type { color: #38bdf8; }
+    .code-string { color: #34d399; }
+    .code-comment { color: #6b7280; font-style: italic; }
+
+    /* Slide 7: Folder Structure */
+    .tree-view {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 25px;
+      line-height: 1.6;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .tree-folder {
+      color: var(--color-secondary);
+      font-weight: 600;
+    }
+
+    .tree-comment {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
+    /* Slide 8: Roadmap & NestJS */
+    .checklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.01);
+      border: 1px solid rgba(255,255,255,0.03);
+      padding: 14px;
+      border-radius: 10px;
+      transition: var(--transition-smooth);
+    }
+
+    .check-item:hover {
+      border-color: rgba(6, 182, 212, 0.2);
+      background: rgba(6, 182, 212, 0.02);
+    }
+
+    .check-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--color-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-secondary);
+      font-size: 0.8rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .check-circle.filled {
+      background: var(--color-secondary);
+      color: #030712;
+    }
+
+    .check-desc h4 {
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .check-desc p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       5. Navigation Controls (Footer)
+       ========================================================================== */
+    .controls-footer {
+      width: 100%;
+      padding: 25px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: linear-gradient(180deg, rgba(8, 11, 17, 0) 0%, rgba(8, 11, 17, 0.85) 100%);
+    }
+
+    .nav-bubbles {
+      display: flex;
+      gap: 8px;
+    }
+
+    .bubble {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: none;
+    }
+
+    .bubble.active {
+      background: var(--color-primary);
+      width: 25px;
+      border-radius: 5px;
+      box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+    }
+
+    .slide-index-display {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .buttons-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-control {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: var(--transition-bounce);
+    }
+
+    .btn-control:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-control:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .fullscreen-btn {
+      font-size: 1.1rem;
+    }
+
+    /* Swipe Hint for touch screens */
+    .swipe-hint {
+      position: absolute;
+      bottom: 85px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.25);
+      pointer-events: none;
+      display: none;
+    }
+
+    @media (pointer: coarse) {
+      .swipe-hint {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background decorative glowing blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="presentation-container">
+    
+    <!-- Top dynamic progress indicator -->
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+
+    <!-- Active Slides Area -->
+    <div class="slides-wrapper">
+
+      <!-- Slide 1: Welcome & Landing -->
+      <div class="slide active" id="slide-1">
+        <div class="glass-card welcome-container">
+          <span class="badge badge-primary">Angular 21 + NgRx Scaffold</span>
+          <h1>Ecommerce <span class="gradient-text">Hub</span></h1>
+          <p>
+            An enterprise-ready, multi-vendor marketplace engineering prototype featuring Customer, Seller, and Admin interfaces driven by robust state management and modern reactive design.
+          </p>
+          <div class="tagline-container">
+            <span class="badge badge-secondary">Standalone API</span>
+            <span class="badge badge-success">SCSS Design Tokens</span>
+            <span class="badge badge-primary">Vitest Integration</span>
+          </div>
+          <button class="btn btn-primary" onclick="nextSlide()" style="margin-top: 15px;">
+            Explore Showcase
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Slide 2: Architectural Vision -->
+      <div class="slide" id="slide-2">
+        <div class="glass-card">
+          <div class="section-title">Concept & Paradigm</div>
+          <h2 class="slide-title">The Vision: Frontend-First Engineering</h2>
+          
+          <div class="grid-2">
+            <div>
+              <div class="vision-card-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                <strong>Decoupled UI Scaffolding</strong>
+              </div>
+              <p class="vision-text">
+                Developing full-stack systems is typically blocked by API readiness. By building a high-fidelity front-end first—backed by reactive structures—the user interface, user workflows, and state machines are fully validated before any server-side coding begins.
+              </p>
+            </div>
+            <div>
+              <div class="vision-card-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <strong>Production API Ready</strong>
+              </div>
+              <p class="vision-text">
+                This is not a throwaway prototype. Core business layers are constructed as Angular services throwing standard RxJS Observables. Replacing simulated endpoints with real HTTP payloads is an easy plug-and-play operation.
+              </p>
+            </div>
+          </div>
+
+          <div class="alert-block">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>
+              <strong>Reactivity in Action:</strong> Mock data modules utilize delay mechanisms to accurately simulate network latencies, allowing developers to inspect loading indicators and state transitions under real-world conditions.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Technology Core -->
+      <div class="slide" id="slide-3">
+        <div class="glass-card">
+          <div class="section-title">Engine Stack</div>
+          <h2 class="slide-title">Technology Under the Hood</h2>
+          
+          <div class="grid-4">
+            <!-- Tech 1 -->
+            <div class="tech-card">
+              <div class="tech-icon">🅰️</div>
+              <h3>Angular 21</h3>
+              <p>Standalone API streamlines structure. Lazy loaded routes optimize bundle sizes. Route guards enforce security policies.</p>
+            </div>
+            <!-- Tech 2 -->
+            <div class="tech-card">
+              <div class="tech-icon">🔁</div>
+              <h3>NgRx Store</h3>
+              <p>Unidirectional state manager caching auth credentials, session profiles, product matrices, and loading states.</p>
+            </div>
+            <!-- Tech 3 -->
+            <div class="tech-card">
+              <div class="tech-icon">🎨</div>
+              <h3>SCSS Architecture</h3>
+              <p>Harmonized layout guidelines governed by SCSS styling tokens, modular variables, and fully responsive layouts.</p>
+            </div>
+            <!-- Tech 4 -->
+            <div class="tech-card">
+              <div class="tech-icon">🧪</div>
+              <h3>Vitest Runner</h3>
+              <p>Modern testing execution with a clean JSDOM environment, replacing slow legacy testing engines.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Feature Focus - Customer Journey -->
+      <div class="slide" id="slide-4">
+        <div class="glass-card">
+          <div class="section-title">Marketplace Features</div>
+          <h2 class="slide-title">Seamless Customer Experience</h2>
+
+          <!-- Interactive Tab Nav -->
+          <div class="tabs-nav">
+            <button class="tab-trigger active" onclick="switchTab(event, 'tab-catalog')">Product Discovery</button>
+            <button class="tab-trigger" onclick="switchTab(event, 'tab-cart')">Smart Cart & Promos</button>
+            <button class="tab-trigger" onclick="switchTab(event, 'tab-checkout')">Guest Checkout</button>
+            <button class="tab-trigger" onclick="switchTab(event, 'tab-tracker')">Order Progress</button>
+          </div>
+
+          <!-- Tab Content 1 -->
+          <div class="tab-content active grid-2" id="tab-catalog">
+            <div>
+              <ul class="feature-list">
+                <li><strong>Interactive Categories:</strong> Deep categorization linking catalog listings dynamically.</li>
+                <li><strong>Multi-Criteria Search:</strong> Dynamic instant filters capturing text search queries.</li>
+                <li><strong>Dynamic Price Range:</strong> Client-side price threshold sliders and availability checkmarks.</li>
+                <li><strong>Smart Sorts:</strong> Instant catalog sorting by rating averages, price metrics, or catalog creation date.</li>
+              </ul>
+            </div>
+            <div class="visual-box" style="padding: 0; overflow: hidden; align-items: center; justify-content: center; background: #0f131f; border-color: rgba(99,102,241,0.2);">
+              <img src="images/customer_catalog.png" alt="AURORA Catalog UI Screenshot" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
+            </div>
+          </div>
+
+          <!-- Tab Content 2 -->
+          <div class="tab-content grid-2" id="tab-cart">
+            <div>
+              <ul class="feature-list">
+                <li><strong>Real-time Synchronized Quantities:</strong> Seamless line item updating and responsive recalculation.</li>
+                <li><strong>Robust Discount Engine:</strong> Client-side validation of active promotional codes.</li>
+                <li><strong>Promo Code: <code>WELCOME10</code></strong> (10% off for carts over $50).</li>
+                <li><strong>Promo Code: <code>SAVE20</code></strong> ($20 flat discount for carts over $100).</li>
+                <li><strong>Caching Persistence:</strong> Keeps your shopping bags stored even if the browser reloads.</li>
+              </ul>
+            </div>
+            <div class="visual-box" style="gap: 10px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
+                <span>Cart Subtotal</span>
+                <span>$120.00</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; color: var(--color-success);">
+                <span>Promo applied: <code>SAVE20</code></span>
+                <span>-$20.00</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;">
+                <span>Total Balance</span>
+                <span>$100.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3 -->
+          <div class="tab-content grid-2" id="tab-checkout">
+            <div>
+              <ul class="feature-list">
+                <li><strong>Double Pathway Checkouts:</strong> Access checkout as a registered customer or an instant guest visitor.</li>
+                <li><strong>Client Form Validation:</strong> In-depth email patterns, numeric phone rules, and zip validations.</li>
+                <li><strong>Mock Payment Gateway:</strong> Visual payment inputs accepting credit credentials safely.</li>
+                <li><strong>Unified User States:</strong> Auto-populates delivery layouts using preset database addresses.</li>
+              </ul>
+            </div>
+            <div class="visual-box" style="align-items: center;">
+              <div style="border: 1px solid var(--border-color); border-radius: 8px; width: 90%; overflow: hidden; background: #111827;">
+                <div style="background:#1f2937; padding:8px 12px; font-size:0.75rem; font-weight:600; display:flex; justify-content:space-between;">
+                  <span>Secure Card Payment</span>
+                  <span>🔒 SSL</span>
+                </div>
+                <div style="padding:12px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="height:25px; background:#1f2937; border-radius:4px; display:flex; align-items:center; padding:0 8px; font-size:0.7rem; color:var(--text-muted);">••••  ••••  ••••  4242</div>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div style="height:25px; background:#1f2937; border-radius:4px; padding:6px; font-size:0.7rem; color:var(--text-muted);">12/29</div>
+                    <div style="height:25px; background:#1f2937; border-radius:4px; padding:6px; font-size:0.7rem; color:var(--text-muted);">123</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 4 -->
+          <div class="tab-content grid-2" id="tab-tracker">
+            <div>
+              <ul class="feature-list">
+                <li><strong>Interactive Logistics State:</strong> Dynamic tracker nodes updating layout statuses in real-time.</li>
+                <li><strong>Logistics Pipeline:</strong> Visual mapping of Order Placed ➔ Processing ➔ Shipped ➔ Delivered.</li>
+                <li><strong>Platform Cohesive:</strong> Updates immediately upon seller-initiated shipping triggers.</li>
+                <li><strong>Track and Trace:</strong> Displays tracking estimates and mock carrier details dynamically.</li>
+              </ul>
+            </div>
+            <div class="visual-box">
+              <div style="font-size:0.8rem; font-weight:600; margin-bottom:5px;">Logistics State: Shipped</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:15px;">Carrier: Global Express • ID: #TRK-983174</div>
+              
+              <div class="tracker-steps">
+                <div class="tracker-bar"></div>
+                <div class="step active">
+                  <div class="step-dot">✓</div>
+                  <span>Placed</span>
+                </div>
+                <div class="step active">
+                  <div class="step-dot">✓</div>
+                  <span>Processed</span>
+                </div>
+                <div class="step active">
+                  <div class="step-dot">🚚</div>
+                  <span>Shipped</span>
+                </div>
+                <div class="step">
+                  <div class="step-dot">🏁</div>
+                  <span>Delivered</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Slide 5: Multi-Vendor Portals -->
+      <div class="slide" id="slide-5">
+        <div class="glass-card">
+          <div class="section-title">Vendor & Control Portals</div>
+          <h2 class="slide-title">Multi-Vendor Management</h2>
+          
+          <div class="grid-2">
+            <!-- Seller -->
+            <div class="portal-pillar">
+              <div>
+                <span class="badge badge-secondary" style="margin-bottom:10px;">Seller Experience</span>
+                <p class="vision-text" style="margin-bottom:15px;">
+                  Sellers gain access to a dedicated dashboard to control their custom catalog, track incoming orders, and inspect earnings reports.
+                </p>
+                <div class="portal-stats">
+                  <div class="stat-mini">
+                    <span>Active Revenue</span>
+                    <strong>$1,240.00</strong>
+                  </div>
+                  <div class="stat-mini">
+                    <span>Products Listed</span>
+                    <strong>12 Items</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="login-credentials-pill">
+                <span>Demo Seller Login:</span>
+                <code>demo: seller@ecommerce-hub.com</code>
+                <code>pass: seller123</code>
+              </div>
+            </div>
+
+            <!-- Admin -->
+            <div class="portal-pillar">
+              <div>
+                <span class="badge badge-primary" style="margin-bottom:10px;">Platform Administrator</span>
+                <p class="vision-text" style="margin-bottom:15px;">
+                  Platform admins can override global structures, alter user roles, manage product catalogs, assign promo codes, and edit CMS banners.
+                </p>
+                <div class="portal-stats">
+                  <div class="stat-mini">
+                    <span>Total Members</span>
+                    <strong>45 Users</strong>
+                  </div>
+                  <div class="stat-mini">
+                    <span>Marketplace Vol</span>
+                    <strong>$14,920.00</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="login-credentials-pill">
+                <span>Demo Admin Login:</span>
+                <code>demo: admin@ecommerce-hub.com</code>
+                <code>pass: admin123</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 6: State & Security -->
+      <div class="slide" id="slide-6">
+        <div class="glass-card">
+          <div class="section-title">Technical Deep Dive</div>
+          <h2 class="slide-title">Unidirectional NgRx State Flow</h2>
+          
+          <!-- State Node Flow -->
+          <div class="arch-flow">
+            <div class="flow-node active-node" id="node-action">1. Dispatch Action</div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-node" id="node-effect">2. Check Side Effects</div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-node" id="node-reducer">3. Reducer Execution</div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-node" id="node-state">4. Update Store</div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-node" id="node-selector">5. Selector Select</div>
+          </div>
+
+          <div class="code-block-container">
+<span class="code-comment">// auth.guard.ts - Secure Route Protection Implementation</span>
+<span class="code-keyword">export const</span> <span class="code-type">roleGuard</span> = (allowedRoles: <span class="code-type">string</span>[]): <span class="code-type">CanActivateFn</span> => {
+  <span class="code-keyword">return</span> () => {
+    <span class="code-keyword">const</span> auth = inject(<span class="code-type">AuthService</span>);
+    <span class="code-keyword">const</span> router = inject(<span class="code-type">Router</span>);
+    <span class="code-keyword">const</span> user = auth.currentUser(); <span class="code-comment">// Signals-based reactive user check</span>
+
+    <span class="code-keyword">if</span> (user && allowedRoles.includes(user.role)) {
+      <span class="code-keyword">return true</span>;
+    }
+
+    <span class="code-keyword">return</span> router.createUrlTree([<span class="code-string">'/'</span>]); <span class="code-comment">// Secure fallback fallback</span>
+  };
+};
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 7: Folder Blueprint -->
+      <div class="slide" id="slide-7">
+        <div class="glass-card">
+          <div class="section-title">Modular Structure</div>
+          <h2 class="slide-title">Project Layout Blueprint</h2>
+          
+          <div class="grid-2">
+            <div class="tree-view">
+              <div><span class="tree-folder">src/app/</span></div>
+              <div>├── <span class="tree-folder">core/</span> <span class="tree-comment">// App singletons & mock api</span></div>
+              <div>│   ├── guards/ <span class="tree-comment">// Route permissions</span></div>
+              <div>│   └── services/ <span class="tree-comment">// Business logic APIs</span></div>
+              <div>├── <span class="tree-folder">shared/</span> <span class="tree-comment">// Global UI components</span></div>
+              <div>│   └── product-card/ <span class="tree-comment">// Grid item container</span></div>
+              <div>├── <span class="tree-folder">layout/</span> <span class="tree-comment">// Scaffold wrappers</span></div>
+              <div>│   ├── main-layout/</div>
+              │   └── seller-layout/</div>
+              <div>├── <span class="tree-folder">features/</span> <span class="tree-comment">// Lazy-loaded business pages</span></div>
+              <div>└── <span class="tree-folder">store/</span> <span class="tree-comment">// NgRx global state slices</span></div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; justify-content:center; gap:20px;">
+              <div>
+                <h4 style="font-family:'Outfit', sans-serif; font-size:1.1rem; margin-bottom:8px; color:var(--color-secondary);">Feature-First Isolation</h4>
+                <p class="vision-text">
+                  Feature folders remain completely encapsulated, lazy-loading their assets only when a user navigates to their specific domain route. This ensures optimal initial bundle sizes and fast page speeds.
+                </p>
+              </div>
+              <div>
+                <h4 style="font-family:'Outfit', sans-serif; font-size:1.1rem; margin-bottom:8px; color:var(--color-primary);">Reusable Shared Module</h4>
+                <p class="vision-text">
+                  Components located inside the <code>shared/</code> directory remain fully dumb and visual-centric, keeping styling definitions tightly coupled while state flows down from parent routing engines.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 8: Future Roadmap -->
+      <div class="slide" id="slide-8">
+        <div class="glass-card">
+          <div class="section-title">System Roadmap</div>
+          <h2 class="slide-title">Next Steps: The Road to Production</h2>
+          
+          <div class="grid-2">
+            <div class="checklist-container">
+              <div class="check-item">
+                <div class="check-circle filled">✓</div>
+                <div class="check-desc">
+                  <h4>Mock Services Complete</h4>
+                  <p>Frontend flows, validation checks, and state stores are fully tested and functional.</p>
+                </div>
+              </div>
+              
+              <div class="check-item">
+                <div class="check-circle">2</div>
+                <div class="check-desc">
+                  <h4>NestJS Backend & JWT</h4>
+                  <p>Introduce a Node gateway securing state transactions utilizing true DB persistence.</p>
+                </div>
+              </div>
+
+              <div class="check-item">
+                <div class="check-circle">3</div>
+                <div class="check-desc">
+                  <h4>Stripe & PayPal Integration</h4>
+                  <p>Equip the payment placeholder module with genuine payment gateway connectors.</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; background:rgba(255,255,255,0.02); border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
+              <span style="font-size:3.5rem; margin-bottom:15px; animation: pulse 2s infinite alternate ease-in-out;">🚀</span>
+              <h3 style="font-family:'Outfit', sans-serif; font-size:1.5rem; margin-bottom:8px;">Ready to Scale</h3>
+              <p class="vision-text" style="max-width:320px; margin-bottom:20px;">
+                Decoupled architecture makes expanding this marketplace incredibly straightforward.
+              </p>
+              <button class="btn btn-primary" onclick="goToSlide(1)">Restart Slides</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Swipe Hint -->
+    <div class="swipe-hint">← Swipe to navigate →</div>
+
+    <!-- Navigation Footer Controls -->
+    <div class="controls-footer">
+      <div class="slide-index-display">
+        Slide <span id="currentSlideNum">1</span> of <span id="totalSlidesNum">8</span>
+      </div>
+
+      <div class="nav-bubbles" id="navBubbles">
+        <!-- Bubbles injected by JS -->
+      </div>
+
+      <div class="buttons-group">
+        <button class="btn-control fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
+          📺
+        </button>
+        <button class="btn-control" id="prevBtn" onclick="prevSlide()" disabled title="Previous (Left Arrow)">
+          ←
+        </button>
+        <button class="btn-control" id="nextBtn" onclick="nextSlide()" title="Next (Right Arrow / Space)">
+          →
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Slide Controller Script -->
+  <script>
+    // ==========================================================================
+    // Slide System State
+    // ==========================================================================
+    let currentSlide = 1;
+    const totalSlides = 8;
+    const slides = [];
+    
+    // Cache slide references
+    for (let i = 1; i <= totalSlides; i++) {
+      slides.push(document.getElementById(`slide-${i}`));
+    }
+
+    // Initialize progress indicators
+    const progressBar = document.getElementById('progressBar');
+    const currentSlideNumSpan = document.getElementById('currentSlideNum');
+    const totalSlidesNumSpan = document.getElementById('totalSlidesNum');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const navBubblesContainer = document.getElementById('navBubbles');
+
+    totalSlidesNumSpan.innerText = totalSlides;
+
+    // Build navigation bubbles
+    for (let i = 1; i <= totalSlides; i++) {
+      const bubble = document.createElement('button');
+      bubble.classList.add('bubble');
+      if (i === 1) bubble.classList.add('active');
+      bubble.addEventListener('click', () => goToSlide(i));
+      bubble.title = `Go to slide ${i}`;
+      navBubblesContainer.appendChild(bubble);
+    }
+    const bubbles = document.querySelectorAll('.bubble');
+
+    // ==========================================================================
+    // Core Slide Navigation Rules
+    // ==========================================================================
+    function updatePresentationUI() {
+      // Bounds checks
+      prevBtn.disabled = (currentSlide === 1);
+      nextBtn.innerText = (currentSlide === totalSlides) ? '🔄' : '→';
+      nextBtn.title = (currentSlide === totalSlides) ? 'Restart slideshow' : 'Next Slide';
+
+      // Update slide index text
+      currentSlideNumSpan.innerText = currentSlide;
+
+      // Update Top Progress Bar
+      const percentage = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+      progressBar.style.width = `${percentage}%`;
+
+      // Update Bubbles
+      bubbles.forEach((bubble, idx) => {
+        if (idx === currentSlide - 1) {
+          bubble.classList.add('active');
+        } else {
+          bubble.classList.remove('active');
+        }
+      });
+
+      // Special active classes for Slide 6 State Machine Simulation
+      if (currentSlide === 6) {
+        startStateSimulation();
+      } else {
+        stopStateSimulation();
+      }
+    }
+
+    function goToSlide(slideIndex) {
+      if (slideIndex < 1) slideIndex = 1;
+      
+      const isAdvancing = slideIndex > currentSlide;
+      
+      // Handle cyclical wrap-around for Next on final slide
+      if (slideIndex > totalSlides) {
+        slideIndex = 1;
+      }
+
+      const activeSlide = document.querySelector('.slide.active');
+      if (activeSlide) {
+        activeSlide.classList.remove('active');
+        // Add exit animation class based on direction
+        if (isAdvancing) {
+          activeSlide.classList.add('exit-left');
+          setTimeout(() => activeSlide.classList.remove('exit-left'), 500);
+        }
+      }
+
+      // Prepare target slide before active entry
+      const targetSlide = slides[slideIndex - 1];
+      targetSlide.className = 'slide'; // Clear old tags
+      
+      if (isAdvancing) {
+        targetSlide.classList.add('enter-right');
+        // Force reflow
+        targetSlide.offsetHeight;
+        targetSlide.classList.remove('enter-right');
+      }
+      
+      targetSlide.classList.add('active');
+      currentSlide = slideIndex;
+      updatePresentationUI();
+    }
+
+    function nextSlide() {
+      goToSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        goToSlide(currentSlide - 1);
+      }
+    }
+
+    // ==========================================================================
+    // Slide 4: Interactive Feature Tabs
+    // ==========================================================================
+    function switchTab(event, tabId) {
+      const parentSlide = event.target.closest('.slide');
+      
+      // Deactivate all tab controls and panes inside this slide
+      parentSlide.querySelectorAll('.tab-trigger').forEach(btn => btn.classList.remove('active'));
+      parentSlide.querySelectorAll('.tab-content').forEach(pane => pane.classList.remove('active'));
+      
+      // Activate clicked trigger and associated content tab
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // ==========================================================================
+    // Slide 6: Reactive State Machine Simulator
+    // ==========================================================================
+    let stateInterval = null;
+    const stateNodeIds = ['node-action', 'node-effect', 'node-reducer', 'node-state', 'node-selector'];
+    
+    function startStateSimulation() {
+      stopStateSimulation(); // Avoid double loops
+      let stepIndex = 0;
+      
+      function cycleStep() {
+        // Clear active borders from all flow elements
+        stateNodeIds.forEach(id => {
+          document.getElementById(id).classList.remove('active-node');
+        });
+        
+        // Highlight active target
+        const activeId = stateNodeIds[stepIndex];
+        document.getElementById(activeId).classList.add('active-node');
+        
+        stepIndex = (stepIndex + 1) % stateNodeIds.length;
+      }
+      
+      cycleStep();
+      stateInterval = setInterval(cycleStep, 1800);
+    }
+
+    function stopStateSimulation() {
+      if (stateInterval) {
+        clearInterval(stateInterval);
+        stateInterval = null;
+      }
+      stateNodeIds.forEach(id => {
+        const node = document.getElementById(id);
+        if (node) node.classList.remove('active-node');
+      });
+      // Ensure index 1 starts active in fallback static state
+      const initialNode = document.getElementById('node-action');
+      if (initialNode) initialNode.classList.add('active-node');
+    }
+
+    // ==========================================================================
+    // Keyboard Controller Bindings
+    // ==========================================================================
+    document.addEventListener('keydown', (event) => {
+      switch (event.code) {
+        case 'ArrowRight':
+        case 'Space':
+        case 'PageDown':
+          event.preventDefault();
+          nextSlide();
+          break;
+        case 'ArrowLeft':
+        case 'PageUp':
+          event.preventDefault();
+          prevSlide();
+          break;
+        case 'Home':
+          event.preventDefault();
+          goToSlide(1);
+          break;
+        case 'End':
+          event.preventDefault();
+          goToSlide(totalSlides);
+          break;
+      }
+    });
+
+    // ==========================================================================
+    // Mobile Touch Gesture swipe bindings
+    // ==========================================================================
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleTouchSwipe();
+    }, false);
+
+    function handleTouchSwipe() {
+      const swipeDistance = touchEndX - touchStartX;
+      const minSwipeThreshold = 50; // pixels
+      
+      if (swipeDistance < -minSwipeThreshold) {
+        // Swiped Left -> Advance
+        nextSlide();
+      } else if (swipeDistance > minSwipeThreshold) {
+        // Swiped Right -> Go Back
+        prevSlide();
+      }
+    }
+
+    // ==========================================================================
+    // Browser Fullscreen support
+    // ==========================================================================
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Error enabling fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Initialize UI Layout on start
+    updatePresentationUI();
+  </script>
+</body>
+</html>

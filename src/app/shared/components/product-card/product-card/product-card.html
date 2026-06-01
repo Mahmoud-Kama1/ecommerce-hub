@@ -1,6 +1,6 @@
 @if (product) {
-  <article class="card product-card">
-    <div class="image">
+  <article class="product-card">
+    <div class="image" [routerLink]="['/products', product.id]" style="cursor: pointer;">
       @if (product.images[0]?.url) {
         <img [src]="product.images[0].url" [alt]="product.images[0].alt || product.name" />
       } @else {
@@ -9,14 +9,21 @@
     </div>
     <a class="title" [routerLink]="['/products', product.id]">{{ product.name }}</a>
     <app-rating-stars [rating]="product.rating" [count]="product.reviewCount" />
+    
     <div class="price-row">
-      <span class="price">${{ product.price | number: '1.2-2' }}</span>
+      <span class="price">${{ product.price | number: '1.0-0' }}</span>
       @if (product.compareAtPrice) {
-        <span class="compare">${{ product.compareAtPrice | number: '1.2-2' }}</span>
+        <span class="compare">${{ product.compareAtPrice | number: '1.0-0' }}</span>
       }
     </div>
+    
     @if (product.stock === 0) {
       <span class="stock-out">Out of stock</span>
+    } @else {
+      <button class="btn-add-cart" type="button" (click)="addToCart($event)">
+        Add to Cart
+      </button>
     }
   </article>
 }
+

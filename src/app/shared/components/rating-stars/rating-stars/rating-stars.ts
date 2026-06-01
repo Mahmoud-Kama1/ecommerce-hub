@@ -6,20 +6,24 @@ import { DecimalPipe } from '@angular/common';
   imports: [DecimalPipe],
   template: `
     <div class="rating">
-      <span>{{ rating | number: '1.1-1' }} ★</span>
-      @if (count != null) {
-        <span class="count">({{ count }})</span>
-      }
+      <span class="star">★</span>
+      <span class="val">{{ rating | number: '1.1-1' }}/5</span>
     </div>
   `,
   styles: `
     .rating {
-      color: #f59e0b;
-      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.825rem;
+      font-weight: 500;
     }
-    .count {
-      color: var(--text-muted);
-      margin-left: 0.25rem;
+    .star {
+      color: #fbbf24; /* Warm gold star */
+      font-size: 0.95rem;
+    }
+    .val {
+      color: #9ca3af; /* Muted slate rating */
     }
   `,
 })

@@ -14,59 +14,84 @@ import { AuthActions } from '../../../../store/auth/auth.actions';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 2rem;
+      padding: 1.25rem 2rem;
       border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      background: #0b0f19;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(7, 10, 18, 0.85);
     }
     nav {
       display: flex;
-      gap: 1.25rem;
+      gap: 1.5rem;
       align-items: center;
       flex-wrap: wrap;
     }
     a {
-      color: var(--text);
+      color: var(--text-muted);
       text-decoration: none;
       font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
     }
     a.active,
     a:hover {
-      color: var(--primary);
+      color: var(--text-bright);
+    }
+    a.active {
+      color: var(--primary) !important;
+      font-weight: 600;
     }
     .brand {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--text-bright);
+      background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+      transition: transform 0.2s ease;
     }
-    .actions {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
+    .brand:hover {
+      transform: scale(1.03);
     }
     .badge {
       background: var(--primary);
       color: white;
       border-radius: 999px;
-      padding: 0.1rem 0.5rem;
+      padding: 2px 8px;
       font-size: 0.75rem;
-      margin-left: 0.25rem;
+      margin-left: 4px;
+      font-weight: bold;
     }
     .user-name {
       color: var(--text-muted);
       font-size: 0.875rem;
+      background: rgba(255,255,255,0.03);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
     }
     .btn-logout {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      padding: 0.375rem 0.75rem;
-      font: inherit;
+      background: transparent;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: var(--danger);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
-      color: var(--text);
+      transition: all 0.2s ease;
     }
     .btn-logout:hover {
-      border-color: var(--primary);
-      color: var(--primary);
+      background: rgba(244, 63, 94, 0.1);
+      border-color: var(--danger);
     }
   `,
 })
